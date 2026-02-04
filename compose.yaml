@@ -1,0 +1,52 @@
+services:
+ 
+#  Backend services here 
+ 
+ 
+  redis:
+    image: redis:alpine
+    restart: always
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass foobarpassword
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data 
+    environment:
+      REDIS_PASSWORD: foobarpassword
+    depends_on:
+      - db
+    ports:
+      - 6379:6379
+
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker compose
+    # shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    volumes:
+      - db_data:/var/lib/postgresql
+
+
+    environment:
+      POSTGRES_PASSWORD: foobarpassword
+      POSTGRES_USER: postgres
+      POSTGRES_DB: arm_auth
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+# Volumes 
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
