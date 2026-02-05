@@ -19,7 +19,7 @@ super({
 
 
   ignoreExpiration: false,
-//   secretOrKey: configService.get<string>('JWT_REFRESH_SECRET')!, // note the `!` at the end
+//   secretOrKey: configService.get<string>('JWT_REFRESH_SECRET')!,
     secretOrKey: configService.get<string>('JWT_REFRESH_SECRET')!,
 });
 

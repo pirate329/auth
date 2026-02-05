@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RedisService } from '../../redis/redis.service';
 
@@ -10,8 +10,8 @@ export interface RateLimitOptions {
   keyPrefix?: string;
 }
 
-export const RateLimit = (options: RateLimitOptions) => 
-  Reflect.metadata(RATE_LIMIT_KEY, options);
+export const RateLimit = (options: RateLimitOptions) =>
+  SetMetadata(RATE_LIMIT_KEY, options);
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
@@ -21,19 +21,27 @@ export class RateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const rateLimitOptions = this.reflector.get<RateLimitOptions>(
-      RATE_LIMIT_KEY,
-      context.getHandler(),
-    );
+
+    const rateLimitOptions = this.reflector.getAllAndOverride<RateLimitOptions>(
+    RATE_LIMIT_KEY,
+    [context.getHandler(), context.getClass()],
+  );
+
+
 
     if (!rateLimitOptions) {
+      console.log('No rate limit options found, skipping rate limiting.');
       return true; // No rate limit applied
     }
 
+    console.log('Rate limit options:', rateLimitOptions);
+    console.log('Applying rate limiting...');
     const request = context.switchToHttp().getRequest();
     const ip = request.ip || request.socket?.remoteAddress || 'unknown';
     const userId = request.user?.id || ip; // Use userId if authenticated, else IP
+    console.log(`Rate limiting for key: ${userId}`);
 
+    // Check rate limit
     const key = `${rateLimitOptions.keyPrefix || 'rate_limit'}:${userId}`;
     const redis = this.redisService.getClient();
 

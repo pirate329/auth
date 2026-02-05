@@ -76,6 +76,8 @@ export class AuthController {
   }
 
   @Get('me')
+  @RateLimit({ points: 5, duration: 60, keyPrefix: 'me' })
+  // 5 requests per minute
   @UseGuards(AccessTokenGuard)
   async me(@Req() req: any) {
     const userId = req.user?.id;
@@ -85,6 +87,8 @@ export class AuthController {
 
 
 @Post('refresh')
+@RateLimit({ points: 3, duration: 900, keyPrefix: 'refresh' })
+  // 3 refresh attempts per 15 minutes
 @UseGuards(RefreshTokenGuard)
 async refresh(@Req() req: any, @Res({ passthrough: true }) res: any) {
   const userId = req.user?.id;
@@ -119,6 +123,8 @@ async refresh(@Req() req: any, @Res({ passthrough: true }) res: any) {
 
 
   @Get('sessions')
+  @RateLimit({ points: 10, duration: 60, keyPrefix: 'me' })
+  // 5 requests per minute
   @UseGuards(AccessTokenGuard)
   async getSessions(@Req() req: any) {
     const userId = req.user?.id;
@@ -126,6 +132,7 @@ async refresh(@Req() req: any, @Res({ passthrough: true }) res: any) {
   }
 
   @Post('logout')
+  @UseGuards(AccessTokenGuard)
   async logout(@Req() req: any) {
     const userId = req.user?.id;
     const sessionId = req.user?.sid;
@@ -133,6 +140,7 @@ async refresh(@Req() req: any, @Res({ passthrough: true }) res: any) {
   }
 
   @Post('logout-all')
+  @UseGuards(AccessTokenGuard)
   async logoutAll(@Req() req: any) {
     const userId = req.user?.id;
     return this.authService.logoutAll(userId);

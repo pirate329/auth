@@ -14,6 +14,8 @@ import { Plan } from 'src/plans/entities/plan.entity';
 
 
 export type JwtTTL = JwtSignOptions['expiresIn'];
+// const SESSION_TTL = 7 * 24 * 60 * 60; //chenge to env befire prod
+
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,7 @@ export class AuthService {
     private refreshSecret: string;
     private accessTTL: JwtTTL;
     private refreshTTL: JwtTTL;
+    private redisSessionTTL: number;
 
     constructor(
         @InjectRepository(User) private userRepo: Repository<User>,
@@ -34,9 +37,10 @@ export class AuthService {
     this.refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET')!;
     this.accessTTL = this.configService.get<JwtTTL>('JWT_ACCESS_TTL')!;
     this.refreshTTL = this.configService.get<JwtTTL>('JWT_REFRESH_TTL')!;
+    this.redisSessionTTL = this.configService.get<number>('REDIS_SESSION_TTL')!;
 
         if (!this.accessSecret || !this.refreshSecret) {
-          throw new Error('JWT secrets are not defined in environment variables!');
+          throw new Error('Check your envs')
         }
     }
     
@@ -118,12 +122,12 @@ async signup(
    
     await redis.setex(
       `session:${savedUser.id}:${sessionId}`,
-      7 * 24 * 60 * 60,
+      this.redisSessionTTL,
       JSON.stringify(sessionData),
     );
 
     await redis.sadd(`user:sessions:${savedUser.id}`, sessionId);
-    await redis.expire(`user:sessions:${savedUser.id}`, 7 * 24 * 60 * 60);
+    await redis.expire(`user:sessions:${savedUser.id}`, this.redisSessionTTL);
 
 
     return {
@@ -217,12 +221,12 @@ async login(
 
   await redis.setex(
     `session:${user.id}:${sessionId}`,
-    7 * 24 * 60 * 60,
+    this.redisSessionTTL,
     JSON.stringify(sessionData),
   );
 
   await redis.sadd(`user:sessions:${user.id}`, sessionId);
-  await redis.expire(`user:sessions:${user.id}`, 7 * 24 * 60 * 60);
+  await redis.expire(`user:sessions:${user.id}`, this.redisSessionTTL);
 
   return { accessToken, refreshToken, sessionId: savedSession.id };
 }
@@ -250,7 +254,7 @@ async getSessions(userId: string) {
     if (sessionData) {
       sessions.push(JSON.parse(sessionData));
     } else {
-      // Optionally, clean up stale session IDs
+      // Optiona but, clean up stale session IDs
       await redis.srem(`user:sessions:${userId}`, sid);
     }
   }
@@ -367,7 +371,7 @@ async logoutAll(userId: string) {
       JSON.stringify(newSessionData),
     );
     await redis.sadd(`user:sessions:${user.id}`, newSessionId);
-    await redis.expire(`user:sessions:${user.id}`, 7 * 24 * 60 * 60);
+    await redis.expire(`user:sessions:${user.id}`, this.redisSessionTTL);
 
     await redis.del(`session:${user.id}:${oldSessionId}`);
     await redis.srem(`user:sessions:${user.id}`, oldSessionId);
