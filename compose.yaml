@@ -1,7 +1,33 @@
 services:
- 
-#  Backend services here 
- 
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: foobarpassword
+      DB_NAME: arm_auth
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: foobarpassword
+      REDIS_SESSION_TTL: 604800  
+
+      JWT_ACCESS_SECRET: foobarnotsosecretkeychangeinproduction
+      JWT_REFRESH_SECRET: foobarnotsosecretkeychangeinproductionREFRESH
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 7d
+
+      NODE_ENV: development
+    env_file:
+      - .env
  
   redis:
     image: redis:alpine

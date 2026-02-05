@@ -10,16 +10,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     private redisService: RedisService,
   ) {
-super({
-  jwtFromRequest: ExtractJwt.fromExtractors([
-    ExtractJwt.fromAuthHeaderAsBearerToken(), // extracts from Authorization header
-    (req) => req?.cookies?.access_token,      // extracts from cookie
-  ]),
+    super({
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(), // extracts from Authorization header
+        (req) => req?.cookies?.access_token, // extracts from cookie
+      ]),
 
-  ignoreExpiration: false,
-  secretOrKey: configService.get<string>('JWT_ACCESS_SECRET')!, // note the `!` at the end
-});
-
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET')!, // note the `!` at the end
+    });
   }
 
   async validate(payload: any) {
@@ -34,13 +33,12 @@ super({
     }
 
     // Return user object (attached to req.user)
-    return { 
-      id: userId, 
-      sessionId: sessionId 
+    return {
+      id: userId,
+      sessionId: sessionId,
     };
   }
 }
-
 
 @Injectable()
 export class AccessTokenGuard extends AuthGuard('jwt') {}

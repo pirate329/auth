@@ -15,6 +15,6 @@ export class Plan {
   @Column({ default: 0 })
   price: number; // optional, for billing
 
-  @OneToMany(() => UserPlan, userPlan => userPlan.plan)
+  @OneToMany(() => UserPlan, (userPlan) => userPlan.plan)
   userPlans: UserPlan[];
 }

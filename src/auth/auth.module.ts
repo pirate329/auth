@@ -14,7 +14,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh-strategy';
   imports: [
     PassportModule,
     TypeOrmModule.forFeature([User, Session, Plan]),
-    JwtModule.registerAsync({ 
+    JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
@@ -23,14 +23,16 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh-strategy';
           expiresIn: configService.get<JwtTTL>('JWT_ACCESS_TTL')!,
         },
       }),
-    }), 
+    }),
 
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_REFRESH_SECRET'),
-        signOptions: { expiresIn: configService.get<JwtTTL>('JWT_REFRESH_TTL')! },
+        signOptions: {
+          expiresIn: configService.get<JwtTTL>('JWT_REFRESH_TTL')!,
+        },
       }),
     }),
   ],

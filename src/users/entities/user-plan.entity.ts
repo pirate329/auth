@@ -6,7 +6,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  Unique
+  Unique,
 } from 'typeorm';
 import { User } from 'src/auth/entities/user.entity';
 import { Plan } from '../../plans/entities/plan.entity';
@@ -18,11 +18,11 @@ export class UserPlan {
   id: string;
 
   // Each user can have only one active plan
-  @ManyToOne(() => User, user => user.userPlans, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.userPlans, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Plan, plan => plan.userPlans)
+  @ManyToOne(() => Plan, (plan) => plan.userPlans)
   @JoinColumn({ name: 'plan_id' })
   plan: Plan;
 

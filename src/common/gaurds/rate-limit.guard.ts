@@ -1,11 +1,18 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus, SetMetadata } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  SetMetadata,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RedisService } from '../../redis/redis.service';
 
 export const RATE_LIMIT_KEY = 'rateLimit';
 
 export interface RateLimitOptions {
-  points: number;  // Number of requests
+  points: number; // Number of requests
   duration: number; // Time window in seconds
   keyPrefix?: string;
 }
@@ -21,13 +28,10 @@ export class RateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-
     const rateLimitOptions = this.reflector.getAllAndOverride<RateLimitOptions>(
-    RATE_LIMIT_KEY,
-    [context.getHandler(), context.getClass()],
-  );
-
-
+      RATE_LIMIT_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!rateLimitOptions) {
       console.log('No rate limit options found, skipping rate limiting.');
@@ -64,11 +68,11 @@ export class RateLimitGuard implements CanActivate {
     // Increment counter
     const multi = redis.multi();
     multi.incr(key);
-    
+
     if (count === 0) {
       multi.expire(key, rateLimitOptions.duration);
     }
-    
+
     await multi.exec();
 
     return true;

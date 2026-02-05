@@ -11,8 +11,10 @@ import { SeedService } from './common/seed/seed.service';
 import Joi from 'joi';
 
 @Module({
-  imports: [AuthModule, UsersModule, 
-  ConfigModule.forRoot({
+  imports: [
+    AuthModule,
+    UsersModule,
+    ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       validationSchema: Joi.object({
@@ -39,30 +41,31 @@ import Joi from 'joi';
         JWT_REFRESH_SECRET: Joi.string().min(32).required(),
         JWT_ACCESS_TTL: Joi.string().required(),
         JWT_REFRESH_TTL: Joi.string().required(),
-    }),
+      }),
 
-    validationOptions: {
-      //abort before server bootsteaps
-      abortEarly: true,
-    }
-  }),
+      validationOptions: {
+        //abort before server bootsteaps
+        abortEarly: true,
+      },
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-    type: 'postgres',
-    host: config.get<string>('DB_HOST'),
-    port: config.get<number>('DB_PORT'),
-    username: config.get<string>('DB_USERNAME'),
-    password: config.get<string>('DB_PASSWORD'),
-    database: config.get<string>('DB_NAME') || 'arm_auth',
-    autoLoadEntities: true,
-    entities: [__dirname + '/**/*.entity{.ts,.js}'],
-    synchronize: true, // Note: set to false in production
-})
-  }),RedisModule, PlansModule],
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: config.get<number>('DB_PORT'),
+        username: config.get<string>('DB_USERNAME'),
+        password: config.get<string>('DB_PASSWORD'),
+        database: config.get<string>('DB_NAME') || 'arm_auth',
+        autoLoadEntities: true,
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true, // Note: set to false in production
+      }),
+    }),
+    RedisModule,
+    PlansModule,
+  ],
   controllers: [AppController],
   providers: [AppService, SeedService],
 })
-
-
 export class AppModule {}

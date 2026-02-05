@@ -1,26 +1,44 @@
-# Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+# Install pnpm
+RUN npm install -g pnpm
 
-RUN npm ci
+# Copy package files first (better caching)
+COPY package.json pnpm-lock.yaml ./
 
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source files
 COPY . .
 
-RUN npm run build
+# Build
+RUN pnpm run build
 
 # Production stage
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+# Install pnpm
+RUN npm install -g pnpm
 
-RUN npm ci --only=production
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
+# Install only production dependencies
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy built app
 COPY --from=builder /app/dist ./dist
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001
+
+USER nestjs
 
 EXPOSE 3000
 
